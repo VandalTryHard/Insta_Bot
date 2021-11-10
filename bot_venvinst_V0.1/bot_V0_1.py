@@ -39,7 +39,7 @@ import random
 # login(username, password)
 
 def search_hashtag(username, password, hashtag):
-    browser = webdriver.Chrome("")  # путь до хрома
+    browser = webdriver.Chrome("chromedriver\chromedriver.exe")  # путь до хрома
     try:
           #заходит на сайт
         browser.get("https://www.instagram.com")
