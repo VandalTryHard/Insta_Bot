@@ -5,6 +5,7 @@ import time
 import random
 from selenium.common.exceptions import  NoSuchElementException
 import requests
+import os
 
 class InstagramBot():
     def __init__(self, username, password):
@@ -50,7 +51,6 @@ class InstagramBot():
         hrefs = browser.find_elements_by_tag_name("a")
         
         urls_posts = [item.get_attribute("href") for item in hrefs if "/p/" in item.get_attribute("href")]
-        print(urls_posts)
 
         #ставим лайк под каждым постом 
         for url in urls_posts:
@@ -72,23 +72,23 @@ class InstagramBot():
             exist = False
         return exist
 
-    # # ставим лайки на пост по прямой ссылке
-    # def put_exactly_like(self, userpost):
-    #     browser = self.browser
-    #     browser.get(userpost)
-    #     time.sleep(4)
-    #     #проверка на корректный ввод поста
-    #     wrong_userpage = "/html/body/div[1]/section/main/div/div/h2"
-    #     if self.xpath_exists(wrong_userpage):
-    #         print("Такого поста нет, проверьте URL")
-    #     else:
-    #         print("Пост успешно найден, ставим лайк")
-    #         time.sleep(2)
-    #         botton_like = "/html/body/div[1]/section/main/div/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button"
-    #         browser.find_element_by_xpath(botton_like).click()
-    #         time.sleep(2)
-    #         print(f"Like поставлен {userpost}")
-    #         self.close_browser()
+    # ставим лайки на пост по прямой ссылке
+    def put_exactly_like(self, userpost):
+        browser = self.browser
+        browser.get(userpost)
+        time.sleep(4)
+        #проверка на корректный ввод поста
+        wrong_userpage = "/html/body/div[1]/section/main/div/h2"
+        if self.xpath_exists(wrong_userpage):
+            print("Такого поста нет, проверьте URL")
+        else:
+            print("Пост успешно найден, ставим лайк")
+            time.sleep(2)
+            botton_like = "/html/body/div[1]/section/main/div/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button"
+            browser.find_element_by_xpath(botton_like).click()
+            time.sleep(2)
+            print(f"Like поставлен {userpost}")
+            self.close_browser()
     
     # метод собирает ссылки на все посты пользователя
     def get_all_posts_urls(self, userpage):
@@ -105,9 +105,9 @@ class InstagramBot():
 
             #сколько скролить страницу аккаунта
             posts_count = browser.find_element_by_xpath("/html/body/div[1]/section/main/div/header/section/ul/li[1]/span/span").text
-            posts_count = str(posts_count[0])+str(posts_count[2: ])
+            # posts_count = str(posts_count[0])+str(posts_count[2: ])
             posts_count = int(posts_count)
-            loops_count = int(posts_count / 5)
+            loops_count = int(posts_count / 10)
             print(loops_count)
 
             #собирает ссылки на все посты
@@ -123,42 +123,23 @@ class InstagramBot():
                 time.sleep(2)
             
             file_name = userpage.split("/") [-2]
+
+            # сохранение списка ссылок в файл
+            with open(f"{file_name}.txt", "a") as file:
+                for post_url in posts_urls:
+                    file.write(post_url + "\n")
             
             # убирает повторяющиеся ссылки на посты
             set_posts_urls = set(posts_urls)
             set_posts_urls = list(set_posts_urls)
+
             # сохранение списка ссылок в новый файл
             with open(f"{file_name}_set.txt", "a") as file:
                 for post_url in posts_urls:
                     file.write(post_url + "\n")
 
-    # # ставим лайки по ссылке на аккаунт пользователя
-    # def put_many_likes(self, userpage):
-    #     browser = self.browser
-    #     self.get_all_posts_urls(userpage)
-    #     file_name = userpage.split("/") [-2]
-    #     time.sleep(4)
-    #     browser.get(userpage)
-    #     time.sleep(4)
-        
-    #     #ставим лайки на рандомный пост
-    #     with open(f"{file_name}_set.txt", "r") as file:
-    #         urls_list = file.readlines()
-    #         for post_url in urls_list:
-    #             try:
-    #                 browser.get(post_url)
-    #                 time.sleep(2)
-    #                 botton_like = "/html/body/div[1]/section/main/div/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button"
-    #                 browser.find_element_by_xpath(botton_like).click()
-    #                 time.sleep(random.randrange(80,100))
-    #                 # time.sleep(2)
-    #                 print(f"Like поставлен {post_url}")
-    #             except Exception as ex:
-    #                 print(ex)
-    #                 self.close_browser()
-    
-    # скачивает контент со страницы
-    def download_userpage_content(self, userpage):
+    # ставим лайки по ссылке на аккаунт пользователя
+    def put_many_likes(self, userpage):
         browser = self.browser
         self.get_all_posts_urls(userpage)
         file_name = userpage.split("/") [-2]
@@ -167,24 +148,56 @@ class InstagramBot():
         time.sleep(4)
         
         #ставим лайки на рандомный пост
-        img_and_video_src_urls = []
         with open(f"{file_name}_set.txt", "r") as file:
             urls_list = file.readlines()
-            for post_url in urls_list[0:10]:
+            for post_url in urls_list[0:6]:
                 try:
                     browser.get(post_url)
-                    time.sleep(20)
+                    time.sleep(2) 
+                    botton_like = "/html/body/div[1]/section/main/div/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button"
+                    browser.find_element_by_xpath(botton_like).click()
+                    # time.sleep(random.randrange(80,100))
+                    time.sleep(2)
+                    print(f"Like поставлен {post_url}")
+                except Exception as ex:
+                    print(ex)
+                    self.close_browser()
+        self.close_browser()
+
+    # скачивает контент со страницы
+    def download_userpage_content(self, userpage):
+        browser = self.browser
+        self.get_all_posts_urls(userpage)
+        file_name = userpage.split("/") [-2]
+        time.sleep(4)
+        browser.get(userpage)
+        time.sleep(4)
+
+        # создание папки для сохранения контента
+        if os.path.exists(f"{file_name}"):
+            print("Папка уже существует")
+        else:
+            os.mkdir(file_name)
+        
+        #ставим лайки на рандомный пост
+        img_and_video_src_urls = []
+        with open(f"{file_name}_set.txt") as file:
+            urls_list = file.readlines()
+            for post_url in urls_list[0:5]:
+                try:
+                    browser.get(post_url)
+                    time.sleep(10)
                     
                     #ищет картинку или видео на странице
-                    img_src = "/html/body/div[1]/section/main/div/div[1]/article/div/div[1]/div/div/div[1]/img"
-                    video_src = "/html/body/div[1]/section/main/div/div[1]/article/div/div[1]/div/div/div[1]/div/div/video"
+                    img_src = "/html/body/div[1]/section/main/div/div[1]/article/div[2]/div/div/div[1]/img"
+                    video_src = "/html/body/div[1]/section/main/div/div[1]/article/div[2]/div/div/div[1]/div/div/video"
                     post_id = post_url.split("/") [-2]
-                    if self.expath_exists(img_src):
+                    if self.xpath_exists(img_src):
                         img_src_url = browser.find_element_by_xpath(img_src).get_attribute("src")
                         img_and_video_src_urls.append(img_src_url)
                         # сохраняем изображение
                         get_img = requests.get(img_src_url)
-                        with open(f"{post_id}_img.jpg", "wb") as img_file:
+                        with open(f"{file_name}/{file_name}_{post_id}_img.jpg", "wb") as img_file:
                             img_file.write(get_img.content)
 
                     elif self.xpath_exists(video_src):
@@ -192,13 +205,13 @@ class InstagramBot():
                         img_and_video_src_urls.append(video_src_url)
                         # сохраняем видео
                         get_video = requests.get(video_src_url, stream=True)
-                        with open(f"{post_id}_video.mp4", "wb") as video_file:
+                        with open(f"{file_name}/{file_name}_{post_id}_video.mp4", "wb") as video_file:
                             for chunk in get_video.iter_content(chunh_size=1024*1024):
                                 if chunk:
                                     video_file.write(chunk)
 
                     else:
-                        print("Что-то пошло не так. 186 строка кода")
+                        print("Что-то пошло не так.")
                         img_and_video_src_urls.append(f"{post_url} нет ссылки!")
 
                     print(f"Контент {post_url} скачет!")
@@ -208,7 +221,7 @@ class InstagramBot():
                     self.close_browser()
             self.close_browser()
         
-        with open("img_and_video_src_urls", "a") as file:
+        with open("{file_name}/{file_name}_{post_id}_img_and_video_src_urls", "a") as file:
             for i in img_and_video_src_urls:
                 file.write(i+"\n")
 
