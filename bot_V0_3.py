@@ -13,10 +13,12 @@ class InstagramBot():
         self.password = password
         self.browser = webdriver.Chrome("chromedriver\chromedriver.exe")
     
+    # метод закрывающий браузер
     def close_browser(self):
         self.browser.close()
         self.browser.quit()
 
+    # логин
     def login(self):
         browser = self.browser
         browser.get("https://www.instagram.com")
@@ -36,7 +38,8 @@ class InstagramBot():
 
         password_input.send_keys(Keys.ENTER)
         time.sleep(5)
- 
+    
+    # ставит лайки по hashtag
     def like_prhoto_by_hashtag(self, hashtag):
         browser = self.browser
         browser.get(f"https://www.instagram.com/explore/tags/{hashtag}/")
@@ -50,10 +53,10 @@ class InstagramBot():
         #Получение ссылки на посты
         hrefs = browser.find_elements_by_tag_name("a")
         
-        urls_posts = [item.get_attribute("href") for item in hrefs if "/p/" in item.get_attribute("href")]
+        posts_urls = [item.get_attribute('href') for item in hrefs if "/p/" in item.get_attribute('href')]
 
         #ставим лайк под каждым постом 
-        for url in urls_posts:
+        for url in posts_urls:
             try:
                 browser.get(url)
                 button_like = browser.find_element_by_xpath("/html/body/div[1]/section/main/div/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button").click()
@@ -81,6 +84,7 @@ class InstagramBot():
         wrong_userpage = "/html/body/div[1]/section/main/div/h2"
         if self.xpath_exists(wrong_userpage):
             print("Такого поста нет, проверьте URL")
+            self.close_browser()
         else:
             print("Пост успешно найден, ставим лайк")
             time.sleep(2)
@@ -96,7 +100,7 @@ class InstagramBot():
         browser.get(userpage)
         time.sleep(4)
 
-        wrong_userpage = "/html/body/div[1]/section/main/div/div/h2"
+        wrong_userpage = "/html/body/div[1]/section/main/div/h2"
         if self.xpath_exists(wrong_userpage):
             print("Такого пользователя нет, проверьте URL")
         else:
@@ -113,19 +117,19 @@ class InstagramBot():
             #собирает ссылки на все посты
             posts_urls = []
             for i in range(0, loops_count):
-                hrefs = browser.find_elements_by_tag_name("a")
-                hrefs = [item.get_attribute("href") for item in hrefs if "/p/" in item.get_attribute("href")]
+                hrefs = browser.find_elements_by_tag_name('a')
+                hrefs = [item.get_attribute('href') for item in hrefs if "/p/" in item.get_attribute('href')]
                 for href in hrefs:
                     posts_urls.append(href)
-                browser.execute_script("window.scroll(0, document.body.scrollHeight);")
+                browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 time.sleep(random.randrange(3, 5))
                 print(f"Итерация {i}")
                 time.sleep(2)
             
-            file_name = userpage.split("/") [-2]
+            file_name = userpage.split("/")[-2]
 
             # сохранение списка ссылок в файл
-            with open(f"{file_name}.txt", "a") as file:
+            with open(f"{file_name}.txt", "w") as file:
                 for post_url in posts_urls:
                     file.write(post_url + "\n")
             
@@ -134,28 +138,28 @@ class InstagramBot():
             set_posts_urls = list(set_posts_urls)
 
             # сохранение списка ссылок в новый файл
-            with open(f"{file_name}_set.txt", "a") as file:
-                for post_url in posts_urls:
+            with open(f"{file_name}_set.txt", "w") as file:
+                for post_url in set_posts_urls:
                     file.write(post_url + "\n")
 
     # ставим лайки по ссылке на аккаунт пользователя
     def put_many_likes(self, userpage):
         browser = self.browser
         self.get_all_posts_urls(userpage)
-        file_name = userpage.split("/") [-2]
+        file_name = userpage.split("/")[-2]
         time.sleep(4)
         browser.get(userpage)
         time.sleep(4)
         
         #ставим лайки на рандомный пост
-        with open(f"{file_name}_set.txt", "r") as file:
+        with open(f"{file_name}_set.txt") as file:
             urls_list = file.readlines()
             for post_url in urls_list[0:6]:
                 try:
                     browser.get(post_url)
                     time.sleep(2) 
-                    botton_like = "/html/body/div[1]/section/main/div/div[1]/article/div/div[2]/div/div[2]/section[1]/span[1]/button"
-                    browser.find_element_by_xpath(botton_like).click()
+                    like_button = "/html/body/div[1]/section/main/div/div/article/div[3]/section[1]/span[1]/button"
+                    browser.find_element_by_xpath(like_button).click()
                     # time.sleep(random.randrange(80,100))
                     time.sleep(2)
                     print(f"Like поставлен {post_url}")
@@ -179,11 +183,11 @@ class InstagramBot():
         else:
             os.mkdir(file_name)
         
-        #ставим лайки на рандомный пост
+        # скачиваем контент
         img_and_video_src_urls = []
-        with open(f"{file_name}_set.txt") as file:
+        with open(f'{file_name}_set.txt') as file:
             urls_list = file.readlines()
-            for post_url in urls_list[0:5]:
+            for post_url in urls_list[0:10]:
                 try:
                     browser.get(post_url)
                     time.sleep(10)
@@ -191,7 +195,8 @@ class InstagramBot():
                     #ищет картинку или видео на странице
                     img_src = "/html/body/div[1]/section/main/div/div[1]/article/div[2]/div/div/div[1]/img"
                     video_src = "/html/body/div[1]/section/main/div/div[1]/article/div[2]/div/div/div[1]/div/div/video"
-                    post_id = post_url.split("/") [-2]
+                    post_id = post_url.split("/")[-2]
+
                     if self.xpath_exists(img_src):
                         img_src_url = browser.find_element_by_xpath(img_src).get_attribute("src")
                         img_and_video_src_urls.append(img_src_url)
@@ -206,25 +211,25 @@ class InstagramBot():
                         # сохраняем видео
                         get_video = requests.get(video_src_url, stream=True)
                         with open(f"{file_name}/{file_name}_{post_id}_video.mp4", "wb") as video_file:
-                            for chunk in get_video.iter_content(chunh_size=1024*1024):
+                            for chunk in get_video.iter_content(chunk_size=1024 * 1024):
                                 if chunk:
                                     video_file.write(chunk)
 
                     else:
                         print("Что-то пошло не так.")
-                        img_and_video_src_urls.append(f"{post_url} нет ссылки!")
+                        img_and_video_src_urls.append(f"{post_url}, нет ссылки!")
 
-                    print(f"Контент {post_url} скачет!")
+                    print(f"Контент {post_url} скачен!")
 
                 except Exception as ex:
                     print(ex)
                     self.close_browser()
             self.close_browser()
         
-        with open("{file_name}/{file_name}_{post_id}_img_and_video_src_urls", "a") as file:
+        with open(f'{file_name}/{file_name}_img_and_video_src_urls.txt', 'a') as file:
             for i in img_and_video_src_urls:
-                file.write(i+"\n")
+                file.write(i + "\n")
 
 my_bot = InstagramBot(username, password)
 my_bot.login()
-my_bot.download_userpage_content(".....")
+my_bot.download_userpage_content("https://www.instagram.com/tommyhellatrigger/")
