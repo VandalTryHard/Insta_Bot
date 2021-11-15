@@ -183,6 +183,8 @@ class InstagramBot():
         else:
             os.mkdir(file_name)
         
+
+        # ЗДЕСЬ ПРОБЛЕМА НЕ СКАЧИВАЕТСЯ!!! д3
         # скачиваем контент
         img_and_video_src_urls = []
         with open(f'{file_name}_set.txt') as file:
